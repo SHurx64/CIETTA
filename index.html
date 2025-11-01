@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html lang="es">
+<head>
+  <title>Monitoreo Invernadero CIETTA</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { 
+      font-family: 'Arial', sans-serif; 
+      background: linear-gradient(135deg, #1e7b1e 0%, #2d9c2d 50%, #34b334 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .logo {
+      max-width: 500px;
+      height: 200;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.2em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .subtitle {
+      margin-top: 5px;
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    .sensors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+    }
+    .sensor-card {
+      background: rgba(255,255,255,0.95);
+      padding: 25px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .sensor-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+    }
+    .sensor-name {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #2d5016;
+      border-bottom: 2px solid #e8f5e8;
+      padding-bottom: 10px;
+    }
+    .sensor-data {
+      font-size: 2.2em;
+      margin: 15px 0;
+      color: #1a3d0c;
+    }
+    .data-label {
+      font-size: 0.8em;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .timestamp {
+      font-size: 0.8em;
+      color: #666;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .status {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.85em;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .status-online {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+    }
+    .status-offline {
+      background: linear-gradient(135deg, #f44336, #da190b);
+    }
+    .data-container {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .data-item {
+      text-align: center;
+    }
+    .icon {
+      font-size: 2.5em;
+      margin-bottom: 5px;
+    }
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 1.2em;
+      padding: 30px;
+    }
+    @media (max-width: 768px) {
+      .sensors-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUuxA3tfx033ojl_7qy2Pf_R2XZPjg6BWvUg&s" alt="Logo CIETTA" class="logo">
+      <h1>Monitoreo Invernadero CIETTA</h1>
+      <div class="subtitle">Sistema de monitoreo en tiempo real - 4 Sensores</div>
+    </div>
+    
+    <div class="sensors-grid" id="sensorsGrid">
+      <div class="loading">⏳ Cargando datos de los sensores...</div>
+    </div>
+  </div>
+
+  <script>
+    const SENSORS = [
+      {
+        name: 'CIETTA 1',
+        channelId: '3142142',
+        readApiKey: 'ZSZ7U4BMJEV022BX'
+      },
+      {
+        name: 'CIETTA 2',
+        channelId: '3142228',
+        readApiKey: 'UY38NM9LRKVA4HWZ'
+      },
+      {
+        name: 'CIETTA 3',
+        channelId: '3142229',
+        readApiKey: '4KX4ORH6A95QOLX6'
+      },
+      {
+        name: 'CIETTA 4',
+        channelId: '3142231',
+        readApiKey: 'QNRODH9WWXT2VVK3'
+      }
+    ];
+
+    async function updateSensor(sensor) {
+      try {
+        const url = `https://api.thingspeak.com/channels/${sensor.channelId}/feeds/last.json?api_key=${sensor.readApiKey}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const isOnline = data.field1 && data.field2;
+        const lastUpdate = data.created_at ? new Date(data.created_at) : new Date();
+        
+        const statusClass = isOnline ? 'status-online' : 'status-offline';
+        const statusText = isOnline ? 'EN LÍNEA' : 'OFFLINE';
+        
+        const tempText = isOnline ? 
+          parseFloat(data.field1).toFixed(1) + '°C' : '--';
+        const humText = isOnline ? 
+          parseFloat(data.field2).toFixed(1) + '%' : '--';
+        
+        return {
+          name: sensor.name,
+          temperature: tempText,
+          humidity: humText,
+          status: statusText,
+          statusClass: statusClass,
+          lastUpdate: isOnline ? lastUpdate.toLocaleTimeString('es-SV') : 'Sin conexión',
+          isOnline: isOnline
+        };
+      } catch (error) {
+        console.error(`Error con ${sensor.name}:`, error);
+        return {
+          name: sensor.name,
+          temperature: '--',
+          humidity: '--',
+          status: 'ERROR',
+          statusClass: 'status-offline',
+          lastUpdate: 'Error de conexión',
+          isOnline: false
+        };
+      }
+    }
+
+    async function updateAllSensors() {
+      const grid = document.getElementById('sensorsGrid');
+      const sensorsData = await Promise.all(SENSORS.map(sensor => updateSensor(sensor)));
+      
+      grid.innerHTML = '';
+      
+      sensorsData.forEach(sensorData => {
+        const card = document.createElement('div');
+        card.className = 'sensor-card';
+        
+        card.innerHTML = `
+          <div class="sensor-name">${sensorData.name}</div>
+          <div class="data-container">
+            <div class="data-item">
+              <div class="data-label">TEMPERATURA</div>
+              <div class="sensor-data">${sensorData.temperature}</div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">HUMEDAD</div>
+              <div class="sensor-data">${sensorData.humidity}</div>
+            </div>
+          </div>
+          <div class="status ${sensorData.statusClass}">${sensorData.status}</div>
+          <div class="timestamp">
+            ${sensorData.isOnline ? 'Actualizado: ' + sensorData.lastUpdate : sensorData.lastUpdate}
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+    }
+
+    setInterval(updateAllSensors, 15000);
+    
+    window.onload = updateAllSensors;
+  </script>
+</body>
+</html>
