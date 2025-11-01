@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+trada<!DOCTYPE HTML>
 <html lang="es">
 <head>
   <title>Monitoreo Invernadero CIETTA</title>
@@ -19,7 +19,7 @@
     }
     .logo {
       max-width: 500px;
-      height: 200;
+      height: 300;
       margin-bottom: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -126,33 +126,33 @@
     <div class="header">
       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUuxA3tfx033ojl_7qy2Pf_R2XZPjg6BWvUg&s" alt="Logo CIETTA" class="logo">
       <h1>Monitoreo Invernadero CIETTA</h1>
-      <div class="subtitle">Sistema de monitoreo en tiempo real - 4 Sensores</div>
+      <div class="subtitle">Sistema de monitoreo</div>
     </div>
     
     <div class="sensors-grid" id="sensorsGrid">
-      <div class="loading">⏳ Cargando datos de los sensores...</div>
+      <div class="loading">Cargando datos de los sensores...</div>
     </div>
   </div>
 
   <script>
     const SENSORS = [
       {
-        name: 'CIETTA 1',
+        name: 'Entrada',
         channelId: '3142142',
         readApiKey: 'ZSZ7U4BMJEV022BX'
       },
       {
-        name: 'CIETTA 2',
+        name: 'Mitad',
         channelId: '3142228',
         readApiKey: 'UY38NM9LRKVA4HWZ'
       },
       {
-        name: 'CIETTA 3',
+        name: 'Final',
         channelId: '3142229',
         readApiKey: '4KX4ORH6A95QOLX6'
       },
       {
-        name: 'CIETTA 4',
+        name: 'Exterior',
         channelId: '3142231',
         readApiKey: 'QNRODH9WWXT2VVK3'
       }
@@ -235,4 +235,5 @@
     window.onload = updateAllSensors;
   </script>
 </body>
+
 </html>
