@@ -4,18 +4,36 @@
   <title>Monitoreo Invernadero CIETTA</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <body>
+  </head>
+<body>
   <div class="container">
     <div class="header">
       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUuxA3tfx033ojl_7qy2Pf_R2XZPjg6BWvUg&s" alt="Logo CIETTA" class="logo">
       <h1>Monitoreo Invernadero CIETTA</h1>
-      <div class="subtitle">Sistema de monitoreo</div>
+      <div class="subtitle">Sistema de monitoreo en tiempo real</div>
     </div>
     
     <div class="sensors-grid" id="sensorsGrid">
       <div class="loading">Cargando datos de los sensores...</div>
     </div>
+
+    <div class="charts-section">
+      <div class="chart-card">
+        <div class="chart-title">Temperatura - Últimas 24 horas</div>
+        <div class="chart-container">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Humedad - Últimas 24 horas</div>
+        <div class="chart-container">
+          <canvas id="humChart"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
+
   <style>
     body { 
       font-family: 'Arial', sans-serif; 
@@ -31,7 +49,7 @@
     }
     .logo {
       max-width: 500px;
-      height: 300;
+      height: auto;
       margin-bottom: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -54,6 +72,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 25px;
+      margin-bottom: 30px;
     }
     .sensor-card {
       background: rgba(255,255,255,0.95);
@@ -102,6 +121,12 @@
       font-weight: bold;
       margin: 10px 0;
     }
+    .status-online {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+    }
+    .status-offline {
+      background: linear-gradient(135deg, #f44336, #da190b);
+    }
     .data-container {
       display: flex;
       justify-content: space-around;
@@ -120,27 +145,155 @@
       font-size: 1.2em;
       padding: 30px;
     }
+    .charts-section {
+      margin-top: 30px;
+    }
+    .chart-card {
+      background: rgba(255,255,255,0.95);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      margin-bottom: 25px;
+    }
+    .chart-title {
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #2d5016;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .chart-container {
+      position: relative;
+      height: 350px;
+    }
     @media (max-width: 768px) {
       .sensors-grid {
         grid-template-columns: 1fr;
       }
+      .chart-container {
+        height: 250px;
+      }
     }
   </style>
-</head>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script>
     const SENSORS = [
       {
         name: 'Interior',
         channelId: '3142142',
-        readApiKey: 'ZSZ7U4BMJEV022BX'
+        readApiKey: 'ZSZ7U4BMJEV022BX',
+        color: '#ff6b6b'
       },
       {
         name: 'Exterior',
         channelId: '3142228',
-        readApiKey: 'UY38NM9LRKVA4HWZ'
+        readApiKey: 'UY38NM9LRKVA4HWZ',
+        color: '#4ecdc4'
       }
     ];
+
+    let tempChart, humChart;
+
+    function initCharts() {
+      const tempCtx = document.getElementById('tempChart').getContext('2d');
+      const humCtx = document.getElementById('humChart').getContext('2d');
+
+      tempChart = new Chart(tempCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: SENSORS.map(sensor => ({
+            label: sensor.name,
+            data: [],
+            borderColor: sensor.color,
+            backgroundColor: sensor.color + '20',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 3
+          }))
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                font: { size: 14 },
+                padding: 15
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Temperatura (°C)',
+                font: { size: 14 }
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Hora',
+                font: { size: 14 }
+              }
+            }
+          }
+        }
+      });
+
+      humChart = new Chart(humCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: SENSORS.map(sensor => ({
+            label: sensor.name,
+            data: [],
+            borderColor: sensor.color,
+            backgroundColor: sensor.color + '20',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 3
+          }))
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                font: { size: 14 },
+                padding: 15
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Humedad (%)',
+                font: { size: 14 }
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Hora',
+                font: { size: 14 }
+              }
+            }
+          }
+        }
+      });
+    }
 
     async function updateSensor(sensor) {
       try {
@@ -182,6 +335,41 @@
       }
     }
 
+    async function updateCharts() {
+      try {
+        for (let i = 0; i < SENSORS.length; i++) {
+          const sensor = SENSORS[i];
+          const url = `https://api.thingspeak.com/channels/${sensor.channelId}/feeds.json?api_key=${sensor.readApiKey}&results=100`;
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.feeds && data.feeds.length > 0) {
+            const labels = data.feeds.map(feed => {
+              const date = new Date(feed.created_at);
+              return date.toLocaleTimeString('es-SV', {hour: '2-digit', minute: '2-digit'});
+            });
+
+            const temps = data.feeds.map(feed => parseFloat(feed.field1));
+            const hums = data.feeds.map(feed => parseFloat(feed.field2));
+
+
+            if (i === 0) {
+              tempChart.data.labels = labels;
+              humChart.data.labels = labels;
+            }
+
+            tempChart.data.datasets[i].data = temps;
+            humChart.data.datasets[i].data = hums;
+          }
+        }
+
+        tempChart.update();
+        humChart.update();
+      } catch (error) {
+        console.error('Error actualizando gráficas:', error);
+      }
+    }
+
     async function updateAllSensors() {
       const grid = document.getElementById('sensorsGrid');
       const sensorsData = await Promise.all(SENSORS.map(sensor => updateSensor(sensor)));
@@ -214,11 +402,16 @@
       });
     }
 
-    setInterval(updateAllSensors, 15000);
-    
-    window.onload = updateAllSensors;
+    async function updateAll() {
+      await updateAllSensors();
+      await updateCharts();
+    }
+
+    window.onload = async function() {
+      initCharts();
+      await updateAll();
+      setInterval(updateAll, 15000); 
+    };
   </script>
 </body>
-
 </html>
-
